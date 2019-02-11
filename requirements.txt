@@ -1,0 +1,11 @@
+numpy>=1.14.5
+matplotlib>=2.2.2
+
+# test
+pytest>=3.5.1
+pytest-cov>=2.5.1
+codecov>=2.0.15
+
+# docs
+docutils==0.14
+numpydoc>=0.8.0

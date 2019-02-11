@@ -1,0 +1,4 @@
+[run]
+source = emf
+omit =
+    setup.py
