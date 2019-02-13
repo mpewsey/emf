@@ -5,7 +5,7 @@ from .properties import str_property, bool_property
 __all__ = ['_BasePhase']
 
 
-class _BasePhase():
+class _BasePhase(object):
     """
     A base class for creating a transmission line phase.
 

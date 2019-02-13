@@ -5,7 +5,7 @@ from .properties import repr_method
 __all__ = ['_BaseEMFAnalysis']
 
 
-class _BaseEMFAnalysis():
+class _BaseEMFAnalysis(object):
     """
     A base class for performing electric and magnetic field analysis of
     transmission lines.
