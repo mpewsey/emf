@@ -1,11 +1,12 @@
 from .const import get_magnetic_perm, get_electric_perm
+from .properties import repr_method
 
 __all__ = ['_BaseEMFAnalysis']
 
 
 class _BaseEMFAnalysis():
     """
-    A class for performing electric and magnetic field analysis of
+    A base class for performing electric and magnetic field analysis of
     transmission lines.
 
     Parameters
@@ -21,6 +22,8 @@ class _BaseEMFAnalysis():
         self.phases = phases
         self.set_magnetic_perm(mu0)
         self.set_electric_perm(e0)
+
+    __repr__ = repr_method('phases', 'mu0', 'e0')
 
     def set_magnetic_perm(self, value):
         """

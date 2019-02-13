@@ -1,5 +1,5 @@
 import numpy as np
-from ..base import _BasePhase, get_magnetic_perm, get_electric_perm
+from ..base import _BasePhase, repr_method
 
 __all__ = ['Phase2D']
 
@@ -50,7 +50,10 @@ class Phase2D(_BasePhase):
         self.x = x
         self.y = y
 
-    def magnetic_field(self, x, y, mu0=get_magnetic_perm('air')):
+    __repr__ = repr_method('name', 'x', 'y', 'diameter', 'voltage', 'current',
+        'phase_angle', 'num_wires', 'spacing', 'ph_type', 'in_deg')
+
+    def magnetic_field(self, x, y, mu0):
         """
         Calculates the x-y magnetic field vector developed by the phase at
         the specified point. The result is a 2D vector of complex values.
@@ -80,7 +83,7 @@ class Phase2D(_BasePhase):
 
         return b * np.array([-dy, dx])
 
-    def potential_coeff(self, phase, e0=get_electric_perm('air')):
+    def potential_coeff(self, phase, e0):
         """
         Returns the potential coefficient between the phase
         and another phase.
@@ -102,4 +105,4 @@ class Phase2D(_BasePhase):
             sklp = (dx2 + dy2)**0.5
             a = np.log(sklp / skl)
 
-        return a/(2*np.pi*e0)
+        return a / (2*np.pi*e0)

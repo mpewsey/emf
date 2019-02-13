@@ -29,6 +29,8 @@ The package may be installed via `pip` by running the below command:
 API Documentation
 =================
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
 
-    emf
+    analysis2d
+    analysis3d
+    base

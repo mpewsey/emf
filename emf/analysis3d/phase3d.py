@@ -1,10 +1,10 @@
 import numpy as np
-from ..base import _BasePhase, array_property, get_magnetic_perm, get_electric_perm
+from ..base import _BasePhase, array_property, repr_method
 
 __all__ = ['Phase3D']
 
 
-def Phase3D(_BasePhase):
+class Phase3D(_BasePhase):
     """
     A class representing a transmission line phase.
 
@@ -52,6 +52,9 @@ def Phase3D(_BasePhase):
 
         self.x1 = x1
         self.x2 = x2
+
+    __repr__ = repr_method('name', 'x1', 'x2', 'diameter', 'voltage', 'current',
+        'phase_angle', 'num_wires', 'spacing', 'ph_type', 'in_deg')
 
     @classmethod
     def from_points(cls, name, points, diameter, voltage, current, phase_angle,
@@ -106,73 +109,96 @@ def Phase3D(_BasePhase):
 
         return objs
 
+    def images(self):
+        """
+        Returns the ground image end coordinates for the phase.
+        """
+        r = np.array([1, 1, -1])
+        x1 = self.x1 * r
+        x2 = self.x2 * r
+        return x1, x2
+
     def length(self):
         """
         Returns the length of the segment.
         """
         return np.linalg.norm(self.x1 - self.x2)
 
-    def magnetic_field(self, x, mu0=get_magnetic_perm('air')):
-        x = np.asarray(x)
-        i = self.phaser_current()
+    def magnetic_field(self, x, mu0):
+        """
+        Returns the magnetic field vector due to the phase.
 
-        l = np.linalg.norm(x2 - x1)
+        Parameters
+        ----------
+        x : array
+            The point at which the field is calculated.
+        mu0: float
+            The magnetic permeability of the space.
+        """
+        x = np.asarray(x)
+        x1, x2 = self.x1, self.x2
+        l = self.length()
+
         d = np.linalg.norm(x - x1)
         d0 = np.dot(x1 - x, x2 - x1) / l
-        k = ((l + d0) / (l**2 + 2*l*d0 + d**2)**0.5 - d0 / d) / (d**2 - d0**2)
 
-        return i * (2*k/l) * np.cross(x2 - x1, x - x1)
+        c1 = d**2 - d0**2
+        c2 = l**2 + 2*l*d0 + d**2
 
-    def potential_coeff(self, phase, e0=get_electric_perm('air')):
+        if d == 0 or c1 == 0 or c2 <= 0:
+            return np.zeros(3, dtype='complex')
+
+        i = self.phaser_current()
+        k = ((l + d0) / c2**0.5 - d0 / d) / c1
+        k *= mu0 / (4*np.pi*l)
+
+        return i * k * np.cross(x2 - x1, x - x1)
+
+    def _potential_coeff(self, x, phase):
+        """
+        Returns the potential coefficents between a point and phase.
+
+        Parameters
+        ----------
+        x : array
+            The point for which the potential is calculated.
+        phase : :class:`.Phase3D`
+            The phase for which the calculation will be performed.
+        """
+        b, e = phase.x1, phase.x2
+        bp, ep = phase.images()
+
+        l = phase.length()
+        d1 = np.linalg.norm(e - x)
+        d2 = np.linalg.norm(b - x)
+
+        if phase is self:
+            r = 0.5 * self.equiv_diameter()
+            d1 = (d1**2 + r**2)**0.5
+            d2 = (d2**2 + r**2)**0.5
+
+        dp1 = np.linalg.norm(ep - x)
+        dp2 = np.linalg.norm(bp - x)
+
+        c1 = np.log((d1 + d2 + l) / (d1 + d2 - l))
+        c2 = np.log((dp1 + dp2 - l) / (dp1 + dp2 + l))
+
+        ca = c1 * c2
+        cb = ((d1 - d2) - (dp1 - dp2)) / l
+        cb += (c1 * (d1**2 - d2**2) - c2 * (dp1**2 - dp2**2)) / (2 * l**2)
+
+        return ca, cb
+
+    def potential_coeff(self, phase, e0):
         """
         Calculates the potential coefficients between the phase potential
         points and another phase segment.
         """
-        l = phase.length()
-
-        # Calculate potential points
         delta = self.x2 - self.x1
         f = delta / 3 + self.x1
         s = delta * (2/3) + self.x1
 
-        # Segment reflection points
-        bp = np.concatenate([phase.x1[:2], -phase.x1[2]])
-        ep = np.concatenate([phase.x2[:2], -phase.x2[2]])
-
-        # Calculate point F coefficients
-        if phase is self:
-            r = 0.5 * self.equiv_diameter()
-            d1 = ((l/3)**2 + r**2)**0.5
-            d2 = ((2*l/3)**2 + r**2)**0.5
-        else:
-            d1 = np.linalg.norm(phase.x1 - f)
-            d2 = np.linalg.norm(phase.x2 - f)
-
-        dp1 = np.linalg.norm(bp - f)
-        dp2 = np.linalg.norm(ep - f)
-        fa = np.log((d1+d2+l) / (d1+d2-l)) * np.log((dp1+dp2-l) / (dp1+dp2+l))
-
-        if phase is self:
-            fb = 0
-        else:
-            fb = (d1-d2)/l + np.log((d1+d2+l)/(d1+d2-l)) * (d1**2-d2**2)/(2*l**2)
-            fb -= ((dp1-dp2)/l + np.log((dp1+dp2+l)/(dp1+dp2-l)) * (dp1**2-dp2**2)/(2*l**2))
-
-        # Calculate point S coefficients
-        if phase is self:
-            d1, d2 = d2, d1
-        else:
-            d1 = np.linalg.norm(phase.x1 - s)
-            d2 = np.linalg.norm(phase.x2 - s)
-
-        dp1 = np.linalg.norm(bp - s)
-        dp2 = np.linalg.norm(ep - s)
-        sa = np.log((d1+d2+l) / (d1+d2-l)) * np.log((dp1+dp2-l) / (dp1+dp2+l))
-
-        if phase is self:
-            sb = 0
-        else:
-            sb = (d1-d2)/l + np.log((d1+d2+l)/(d1+d2-l)) * (d1**2-d2**2)/(2*l**2)
-            sb -= ((dp1-dp2)/l + np.log((dp1+dp2+l)/(dp1+dp2-l)) * (dp1**2-dp2**2)/(2*l**2))
+        fa, fb = self._potential_coeff(f, phase)
+        sa, sb = self._potential_coeff(s, phase)
 
         return np.array([[fa, fb], [sa, sb]]) / (4*np.pi*e0)

@@ -4,6 +4,7 @@ __all__ = [
     'bool_property',
     'str_property',
     'array_property',
+    'repr_method',
 ]
 
 
@@ -79,3 +80,19 @@ def array_property(name):
         delattr(self, name)
 
     return property(fget=fget, fset=fset, fdel=fdel)
+
+
+def repr_method(*args):
+    """
+    A wrapper for creating a `__repr__` method for a class via property names.
+
+    Parameters
+    ----------
+    args : str
+        Any number of property name strings.
+    """
+    def func(obj):
+        s = ['{}={!r}'.format(k, getattr(obj, k)) for k in args]
+        return '{}({})'.format(type(obj).__name__, ', '.join(s))
+
+    return func
