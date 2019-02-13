@@ -36,7 +36,7 @@ class Phase2D(_BasePhase):
     """
     def __init__(self, name, x, y, diameter, voltage, current, phase_angle,
                  num_wires=1, spacing=0, ph_type='ac3', in_deg=True):
-        super().__init__(
+        super(Phase2D, self).__init__(
             name=name,
             diameter=diameter,
             voltage=voltage,

@@ -39,7 +39,7 @@ class Phase3D(_BasePhase):
 
     def __init__(self, name, x1, x2, diameter, voltage, current, phase_angle,
                  num_wires=1, spacing=0, ph_type='ac3', in_deg=True):
-        super().__init__(
+        super(Phase3D, self).__init__(
             name=name,
             diameter=diameter,
             voltage=voltage,
