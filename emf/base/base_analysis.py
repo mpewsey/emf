@@ -1,3 +1,4 @@
+from __future__ import division
 from .const import get_magnetic_perm, get_electric_perm
 from .properties import repr_method
 

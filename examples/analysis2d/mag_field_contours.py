@@ -1,6 +1,6 @@
 # mag_field_contours.py
 import numpy as np
-from emf.analysis2d import Phase2D, EMFAnalysis2D
+from emf import Phase2D, EMFAnalysis2D
 
 phases = [
     Phase2D('A', -10, 10.6, 0.033, 525000, 1000, 120, 3, 0.45),

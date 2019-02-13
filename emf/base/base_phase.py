@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 from .properties import str_property, bool_property
 
