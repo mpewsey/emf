@@ -23,5 +23,6 @@ This module contains components for performing EMF analysis.
     EMFAnalysis3D
 """
 
+from . import config
 from .analysis2d import *
 from .analysis3d import *

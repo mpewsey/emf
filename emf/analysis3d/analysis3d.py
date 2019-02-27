@@ -1,7 +1,7 @@
 from __future__ import division
 import numpy as np
-from ..base._plt import plt
 from ..base import _BaseEMFAnalysis
+import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 __all__ = ['EMFAnalysis3D']
