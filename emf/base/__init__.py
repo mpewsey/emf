@@ -14,17 +14,6 @@ Constants
     get_electric_perm
 
 
-Properties
-==========
-.. autosummary::
-    :toctree: generated/
-
-    bool_property
-    str_property
-    array_property
-    repr_method
-
-
 Base Classes
 ============
 .. autosummary::
@@ -37,4 +26,3 @@ Base Classes
 from .base_analysis import *
 from .base_phase import *
 from .const import *
-from .properties import *

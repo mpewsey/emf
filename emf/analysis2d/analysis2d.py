@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np
+from math import pi
 from ..base import _BaseEMFAnalysis
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -31,7 +32,8 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             The x and y coordinates at which the magnetic field will
             be calculated.
         """
-        return sum(p.magnetic_field(x, y, self.mu0) for p in self.phases)
+        mu0 = self.mu0
+        return sum(p.magnetic_field(x, y, mu0) for p in self.phases)
 
     def net_magnetic_field(self, x, y):
         """
@@ -44,19 +46,22 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             be calculated.
         """
         f = self.magnetic_field(x, y)
-        return np.sum(f.real**2 + f.imag**2)**0.5
+        return np.linalg.norm(f)
 
     def potential_coeffs(self):
         """
         Returns the potential coefficient matrix of the phases.
         """
-        n = len(self.phases)
+        e0 = self.e0
+        phases = self.phases
+
+        n = len(phases)
         p = np.zeros((n, n), dtype='float')
 
-        for i in range(n):
+        for i, k in enumerate(phases):
             for j in range(i, n):
-                k, l = self.phases[i], self.phases[j]
-                p[i, j] = p[j, i] = k.potential_coeff(l, self.e0)
+                l = phases[j]
+                p[i, j] = p[j, i] = k.potential_coeff(l, e0)
 
         return p
 
@@ -65,11 +70,12 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
         Returns the charges of the phases.
         """
         p = self.potential_coeffs()
-        v = np.array([k.ph_to_gnd_voltage() for k in self.phases])
+        p = np.linalg.inv(p)
+        v = [k.ph_to_gnd_voltage() for k in self.phases]
 
-        return np.dot(np.linalg.inv(p), v)
+        return p.dot(v)
 
-    def electric_field(self, x, y):
+    def electric_field(self, x, y, qs=None):
         """
         Returns the electric field vector at the given point.
 
@@ -78,21 +84,30 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
         x, y : float
             The x and y coordinates of the point where the electric
             field will be calculated.
+        qs : array
+            An array of phase charges. If None, the charges will be calculated.
         """
-        e = np.zeros(2, dtype='complex')
-        qs = self.charges()
+        if qs is None:
+            qs = self.charges()
+        else:
+            qs = np.asarray(qs)
 
-        for p, q in zip(self.phases, qs):
-            xm = x - p.x
-            a = xm**2 + (p.y - y)**2
-            b = xm**2 + (p.y + y)**2
-            ex = xm / a - xm / b
-            ey = (y - p.y) / a - (y + p.y) / b
-            e += (q / (2*np.pi*self.e0)) * np.array([ex, ey])
+        qs = qs / (2*pi*self.e0)
+        ph = np.array([(p.x, p.y) for p in self.phases])
+
+        xm = x - ph[:,0]
+        xm2 = xm**2
+        a = xm2 + (ph[:,1] - y)**2
+        b = xm2 + (ph[:,1] + y)**2
+        ex = xm / a - xm / b
+        ey = (y - ph[:,1]) / a - (y + ph[:,1]) / b
+        ex = np.dot(qs, ex)
+        ey = np.dot(qs, ey)
+        e = np.array([ex, ey], dtype='complex')
 
         return e
 
-    def net_electric_field(self, x, y):
+    def net_electric_field(self, x, y, qs=None):
         """
         Returns the resultant electric field at the given point.
 
@@ -101,9 +116,11 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
         x, y : float
             The x and y coordinates of the point where the electric
             field will be calculated.
+        qs : array
+            An array of phase charges. If None, the charges will be calculated.
         """
-        e = self.electric_field(x, y)
-        return np.sum(e.real**2 + e.imag**2)**0.5
+        e = self.electric_field(x, y, qs)
+        return np.linalg.norm(e)
 
     def space_potential(self, x, y):
         """
@@ -115,16 +132,15 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             The x and y coordinates of the point where the space
             potential will be calculated.
         """
-        v = 0
         qs = self.charges()
+        ph = np.array([(p.x, p.y) for p in self.phases])
 
-        for p, q in zip(self.phases, qs):
-            dx2 = (p.x - x)**2
-            sk = (dx2 + (p.y - y)**2)**0.5
-            skp = (dx2 + (p.y + y)**2)**0.5
-            v += q * np.log(sk / skp)
+        dx2 = (ph[:,0] - x)**2
+        sk = dx2 + (ph[:,1] - y)**2
+        skp = dx2 + (ph[:,1] + y)**2
+        v = np.dot(qs, np.log((sk / skp)**0.5))
 
-        return v / (2*np.pi*self.e0)
+        return v / (2*pi*self.e0)
 
     def net_space_potential(self, x, y):
         """
@@ -137,7 +153,7 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             potential will be calculated.
         """
         v = self.space_potential(x, y)
-        return (v.real**2 + v.imag**2)**0.5
+        return np.linalg.norm(v)
 
     def plot_geometry(self):
         """
@@ -196,9 +212,10 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             aspect='equal'
         )
 
+        qs = self.charges()
         p = np.array(np.meshgrid(xs, ys)).T
         p = p.reshape(-1, 2)
-        f = np.array([self.net_electric_field(x, y) for x, y in p])
+        f = np.array([self.net_electric_field(x, y, qs) for x, y in p])
 
         mn, mx = np.min(f), np.max(f)
         levels = np.logspace(np.log10(mn), np.log10(mx), 20)
@@ -326,8 +343,10 @@ class EMFAnalysis2D(_BaseEMFAnalysis):
             ylabel='Electric Field (V/m)'
         )
 
+        qs = self.charges()
+
         for y in ys:
-            f = [self.net_electric_field(x, y) for x in xs]
+            f = [self.net_electric_field(x, y, qs) for x in xs]
             label = 'y={} m'.format(y)
             ax.plot(xs, f, label=label)
 

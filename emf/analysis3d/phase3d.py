@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
-from ..base import _BasePhase, array_property, repr_method
+from math import pi
+from ..base import _BasePhase
 
 __all__ = ['Phase3D']
 
@@ -34,9 +35,6 @@ class Phase3D(_BasePhase):
         Specify True if input phase angle is in degrees; False if angle
         is in radians.
     """
-    x1 = array_property('x1')
-    x2 = array_property('x2')
-
     def __init__(self, name, x1, x2, diameter, voltage, current, phase_angle,
                  num_wires=1, spacing=0, ph_type='ac3', in_deg=True):
         super(Phase3D, self).__init__(
@@ -51,11 +49,26 @@ class Phase3D(_BasePhase):
             in_deg=in_deg
         )
 
-        self.x1 = x1
-        self.x2 = x2
+        self.x1 = np.asarray(x1)
+        self.x2 = np.asarray(x2)
 
-    __repr__ = repr_method('name', 'x1', 'x2', 'diameter', 'voltage', 'current',
-        'phase_angle', 'num_wires', 'spacing', 'ph_type', 'in_deg')
+    def __repr__(self):
+        s = [
+            ('name', self.name),
+            ('x1', self.x1),
+            ('x2', self.x2),
+            ('diameter', self.diameter),
+            ('voltage', self.voltage),
+            ('current', self.current),
+            ('phase_angle', self.phase_angle),
+            ('num_wires', self.num_wires),
+            ('spacing', self.spacing),
+            ('ph_type', self.ph_type),
+            ('in_deg', self.in_deg)
+        ]
+
+        s = ', '.join('{}={!r}'.format(x, y) for x, y in s)
+        return '{}({})'.format(type(self).__name__, s)
 
     @classmethod
     def from_points(cls, name, points, diameter, voltage, current, phase_angle,
@@ -149,9 +162,9 @@ class Phase3D(_BasePhase):
         if d == 0 or c1 == 0 or c2 <= 0:
             return np.zeros(3, dtype='complex')
 
-        i = self.phaser_current()
+        i = self.phasor_current()
         k = ((l + d0) / c2**0.5 - d0 / d) / c1
-        k *= mu0 / (4*np.pi*l)
+        k *= mu0 / (4*pi*l)
 
         return i * k * np.cross(x2 - x1, x - x1)
 
@@ -202,4 +215,4 @@ class Phase3D(_BasePhase):
         fa, fb = self._potential_coeff(f, phase)
         sa, sb = self._potential_coeff(s, phase)
 
-        return np.array([[fa, fb], [sa, sb]]) / (4*np.pi*e0)
+        return np.array([[fa, fb], [sa, sb]]) / (4*pi*e0)

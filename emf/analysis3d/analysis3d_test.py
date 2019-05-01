@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from math import pi
 from .analysis3d import *
 from .phase3d import *
 
@@ -41,5 +42,5 @@ def test_plot_mag_field_contours():
     emf.plot_mag_field_contours(
         xs=np.linspace(-20, 20, 25),
         ys=np.linspace(0, 40, 25),
-        angle_x=np.pi/2
+        angle_x=pi/2
     )
