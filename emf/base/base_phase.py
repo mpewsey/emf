@@ -1,6 +1,5 @@
 from __future__ import division
-import numpy as np
-from .properties import str_property, bool_property
+from math import pi, cos, sin
 
 __all__ = ['_BasePhase']
 
@@ -32,9 +31,6 @@ class _BasePhase(object):
         Specify True if input phase angle is in degrees; False if angle
         is in radians.
     """
-    name = str_property('name')
-    in_deg = bool_property('in_deg')
-
     TYPES = {
         # Phase type: Phase-to-ground factor
         'ac3': 1/3**0.5,
@@ -58,7 +54,7 @@ class _BasePhase(object):
         Returns the phase angle in radians.
         """
         if self.in_deg:
-            return np.deg2rad(self.phase_angle)
+            return self.phase_angle * pi / 180
         return self.phase_angle
 
     def equiv_diameter(self):
@@ -66,7 +62,11 @@ class _BasePhase(object):
         Returns the equivalent diameter for the phase bundle.
         """
         n = self.num_wires
-        db = self.spacing / np.sin(np.pi/n)
+
+        if n == 1:
+            return self.diameter
+
+        db = self.spacing / sin(pi/n)
         return (n * self.diameter * db**(n-1))**(1/n)
 
     def ph_to_gnd_voltage(self):
@@ -75,13 +75,13 @@ class _BasePhase(object):
         The value is a complex number.
         """
         ang = self.get_phase_angle()
-        f = _BasePhase.TYPES[self.ph_type]
-        return self.voltage * f * complex(np.cos(ang), np.sin(ang))
+        v = self.voltage * self.TYPES[self.ph_type]
+        return v * complex(cos(ang), sin(ang))
 
-    def phaser_current(self):
+    def phasor_current(self):
         """
         Returns the currect with real and reactive components.
         The result is a complex number.
         """
         ang = self.get_phase_angle()
-        return self.current * complex(np.cos(ang), np.sin(ang))
+        return self.current * complex(cos(ang), sin(ang))

@@ -1,4 +1,4 @@
-import numpy as np
+from math import pi
 
 __all__ = [
     'get_magnetic_perm',
@@ -7,7 +7,7 @@ __all__ = [
 
 
 MAGNETIC_PERM = {
-    'air': 4*np.pi*1e-7,
+    'air': pi*4e-7,
 }
 
 ELECTRIC_PERM = {

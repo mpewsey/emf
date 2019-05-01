@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
-from ..base import _BasePhase, repr_method
+from math import pi, log
+from ..base import _BasePhase
 
 __all__ = ['Phase2D']
 
@@ -51,8 +52,23 @@ class Phase2D(_BasePhase):
         self.x = x
         self.y = y
 
-    __repr__ = repr_method('name', 'x', 'y', 'diameter', 'voltage', 'current',
-        'phase_angle', 'num_wires', 'spacing', 'ph_type', 'in_deg')
+    def __repr__(self):
+        s = [
+            ('name', self.name),
+            ('x', self.x),
+            ('y', self.y),
+            ('diameter', self.diameter),
+            ('voltage', self.voltage),
+            ('current', self.current),
+            ('phase_angle', self.phase_angle),
+            ('num_wires', self.num_wires),
+            ('spacing', self.spacing),
+            ('ph_type', self.ph_type),
+            ('in_deg', self.in_deg),
+        ]
+
+        s = ', '.join('{}={!r}'.format(x, y) for x, y in s)
+        return '{}({})'.format(type(self).__name__, s)
 
     def magnetic_field(self, x, y, mu0):
         """
@@ -72,15 +88,15 @@ class Phase2D(_BasePhase):
         dy = y - self.y
         r = (dx**2 + dy**2)**0.5
 
-        i = self.phaser_current()
+        i = self.phasor_current()
         rw = 0.5 * self.diameter
 
         if r < rw:
             # Point is inside wire
-            b = i * (mu0 / (2*np.pi*rw**2))
+            b = i * (mu0 / (2*pi*rw**2))
         else:
             # Point is outside wire
-            b = i * (mu0 / (2*np.pi*r**2))
+            b = i * (mu0 / (2*pi*r**2))
 
         return b * np.array([-dy, dx])
 
@@ -97,13 +113,13 @@ class Phase2D(_BasePhase):
             The electric permittivity of the space.
         """
         if phase is self:
-            a = np.log(4*self.y / self.equiv_diameter())
+            a = log(4*self.y / self.equiv_diameter())
         else:
             dx2 = (self.x - phase.x)**2
             dy2 = (self.y - phase.y)**2
             skl = (dx2 + dy2)**0.5
             dy2 = (self.y + phase.y)**2
             sklp = (dx2 + dy2)**0.5
-            a = np.log(sklp / skl)
+            a = log(sklp / skl)
 
-        return a / (2*np.pi*e0)
+        return a / (2*pi*e0)

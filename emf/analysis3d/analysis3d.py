@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np
+from math import pi
 from ..base import _BaseEMFAnalysis
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -43,7 +44,7 @@ class EMFAnalysis3D(_BaseEMFAnalysis):
             The (x, y, z) coordinates where the value will be calculated.
         """
         f = self.magnetic_field(x)
-        return np.sum(f.real**2 + f.imag**2)**0.5
+        return np.linalg.norm(f)
 
     def potential_coeffs(self):
         """
@@ -139,7 +140,7 @@ class EMFAnalysis3D(_BaseEMFAnalysis):
             x1, x2 = phase.images()
             e += self._electric_field(x, x1, x2, -q, -dq)
 
-        return e / (4*np.pi*self.e0)
+        return e / (4*pi*self.e0)
 
     def net_electric_field(self, x):
         """
@@ -151,7 +152,7 @@ class EMFAnalysis3D(_BaseEMFAnalysis):
             The (x, y, z) coordinates where the value will be calculated.
         """
         e = self.electric_field(x)
-        return np.sum(e.real**2 + e.imag**2)**0.5
+        return np.linalg.norm(e)
 
     @staticmethod
     def _space_potential(x, b, e, q, dq):
@@ -197,7 +198,7 @@ class EMFAnalysis3D(_BaseEMFAnalysis):
             b, e = phase.images()
             v += self._space_potential(x, b, e, -q, -dq)
 
-        return v / (4*np.pi*self.e0)
+        return v / (4*pi*self.e0)
 
     def net_space_potential(self, x):
         """
@@ -209,7 +210,7 @@ class EMFAnalysis3D(_BaseEMFAnalysis):
             The (x, y, z) coordinates where the value will be calculated.
         """
         v = self.space_potential(x)
-        return (v.real**2 + v.imag**2)**0.5
+        return np.linalg.norm(v)
 
     def plot_geometry(self, symbols={}):
         """

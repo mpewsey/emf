@@ -1,6 +1,5 @@
 from __future__ import division
 from .const import get_magnetic_perm, get_electric_perm
-from .properties import repr_method
 
 __all__ = ['_BaseEMFAnalysis']
 
@@ -24,7 +23,15 @@ class _BaseEMFAnalysis(object):
         self.set_magnetic_perm(mu0)
         self.set_electric_perm(e0)
 
-    __repr__ = repr_method('phases', 'mu0', 'e0')
+    def __repr__(self):
+        s = [
+            ('phases', self.phases),
+            ('mu0', self.mu0),
+            ('e0', self.e0),
+        ]
+
+        s = ', '.join('{}={!r}'.format(x, y) for x, y in s)
+        return '{}({})'.format(type(self).__name__, s)
 
     def set_magnetic_perm(self, value):
         """

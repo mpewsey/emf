@@ -14,6 +14,10 @@ def EMFAnalysis2D_1():
     return EMFAnalysis2D(phases)
 
 
+def test_repr():
+    repr(EMFAnalysis2D_1())
+
+
 def test_net_magnetic_field():
     emf = EMFAnalysis2D_1()
     xs = [-200, -100, 0, 100, 200, 500, 1000, 2000, 5000]
