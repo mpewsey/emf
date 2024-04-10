@@ -4,6 +4,10 @@
 [![Documentation Status](https://readthedocs.org/projects/emf/badge/?version=latest)](https://emf.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/mpewsey/emf/branch/master/graph/badge.svg)](https://codecov.io/gh/mpewsey/emf)
 
+```diff
+- NOTE: The 3D analysis portion of this package is unverified and experimental.
+```
+
 ## About
 
 This package provides tools for performing electromagnetic field (EMF) analysis
